@@ -172,35 +172,25 @@ class BarkeepServer < Sinatra::Base
   end
 
   before do
-    # When running in read-only demo mode, if the user is not logged in, treat them as a demo user.
-    self.current_user ||= User.find(:email => session[:email])
-    if current_user.nil? && (defined?(ENABLE_READONLY_DEMO_MODE) && ENABLE_READONLY_DEMO_MODE)
-      self.current_user = User.first(:permission => "demo")
-      current_user.rack_session = session
-      # Setting this to false silences the exception that Sequel generates when we cancel the default save
-      # behavior for demo searches.
-      SavedSearch.raise_on_save_failure = false
-    else
-      SavedSearch.raise_on_save_failure = true
+    if not request.url.match (/^.+\/signin\/complete.+/)
+      if session[:email].nil?
+        session[:login_started_url] = request.url
+        redirect "/signin/complete?user=atw@alum.mit.edu"
+      else
+        self.current_user ||= User.find(:email => session[:email])
+        if current_user
+          halt 401, "This account has been deleted." if current_user.deleted?
+        end
+      end
     end
+    #   # TODO(philc): Revisit this UX. Dumping the user into Google with no explanation is not what we want.
 
-    next if UNAUTHENTICATED_ROUTES.any? { |route| request.path =~ /^#{route}/ }
-    if (!defined?(PERMITTED_USERS) || PERMITTED_USERS.empty?) &&
-      UNAUTHENTICATED_PREVIEW_ROUTES.any? { |route| request.path =~ /^#{route}/ }
-      next
-    end
-
-    if current_user
-      halt 401, "This account has been deleted." if current_user.deleted?
-    else
-      # TODO(philc): Revisit this UX. Dumping the user into Google with no explanation is not what we want.
-
-      # Save url to return to it after login completes.
-      session[:login_started_url] = request.url
-      redirect(OPENID_PROVIDERS_ARRAY.size == 1 ?
-         get_openid_login_redirect(OPENID_PROVIDERS_ARRAY.first) :
-        "/signin/select_openid_provider")
-    end
+    #   # Save url to return to it after login completes.
+    #   session[:login_started_url] = request.url
+    #   redirect(OPENID_PROVIDERS_ARRAY.size == 1 ?
+    #      get_openid_login_redirect(OPENID_PROVIDERS_ARRAY.first) :
+    #     "/signin/select_openid_provider")
+    # end
   end
 
   get("/favicon.ico") { redirect asset_url("favicon.ico") }
@@ -229,15 +219,16 @@ class BarkeepServer < Sinatra::Base
 
   # Handle login complete from openid provider.
   get "/signin/complete" do
-    session[:email] = params["user"]
+    email = params["user"]
+    session[:email] = email
 
     unless User.find(:email => email)
       # If there are no admin users yet, make the first user to log in the first admin.
       permission = User.find(:permission => "admin").nil? ? "admin" : "normal"
       User.new(:email => email, :name => email, :permission => permission).save
     end
-    # redirect session[:login_started_url] || "/"
-    redirect "/"
+
+    redirect session[:login_started_url] || "/"
   end
 
   get "/signout" do

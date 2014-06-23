@@ -12,7 +12,7 @@
 # Install core dependencies
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y g++ build-essential libxslt1-dev libxml2-dev \
-  python-dev libmysqlclient-dev redis-server mysql-server nginx
+  python-dev libmysqlclient-dev redis-server mysql-server
 
 # Install git 1.7.6+
 sudo apt-get -y install python-software-properties
@@ -35,9 +35,9 @@ git clone git://github.com/ooyala/barkeep.git ~/barkeep
 cd ~/barkeep && bundle install && rbenv rehash
 
 # Configure a reverse proxy webserver (nginx) to Barkeep
-sudo rm /etc/nginx/sites-enabled/default
-sudo cp ~/barkeep/config/system_setup_files/nginx_site.prod.conf /etc/nginx/sites-enabled/barkeep
-sudo /etc/init.d/nginx restart
+#sudo rm /etc/nginx/sites-enabled/default
+#sudo cp ~/barkeep/config/system_setup_files/nginx_site.prod.conf /etc/nginx/sites-enabled/barkeep
+#sudo /etc/init.d/nginx restart
 
 # Create database and run migrations
 mysqladmin -u root --password='' create barkeep
