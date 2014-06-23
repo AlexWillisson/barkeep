@@ -172,10 +172,11 @@ class BarkeepServer < Sinatra::Base
   end
 
   before do
-    if not request.url.match (/^.+\/signin\/complete.+/)
+    if not request.url.match (/^.+\/signin.*/)
       if session[:email].nil?
         session[:login_started_url] = request.url
-        redirect "/signin/complete?user=atw@alum.mit.edu"
+        redirect "/signin"
+#        redirect "/signin/complete?user=atw@alum.mit.edu"
       else
         self.current_user ||= User.find(:email => session[:email])
         if current_user
@@ -199,10 +200,12 @@ class BarkeepServer < Sinatra::Base
 
   get "/signin" do
     session.clear
-    session[:login_started_url] = request.referrer
-    redirect(OPENID_PROVIDERS_ARRAY.size == 1 ?
-       get_openid_login_redirect(OPENID_PROVIDERS_ARRAY.first) :
-      "/signin/select_openid_provider")
+    "Please visit /signin/complete?user=user@example.com at this host
+     where user@example.com is your email address"
+#    session[:login_started_url] = request.referrer
+#    redirect(OPENID_PROVIDERS_ARRAY.size == 1 ?
+#       get_openid_login_redirect(OPENID_PROVIDERS_ARRAY.first) :
+#      "/signin/select_openid_provider")
   end
 
   get "/signin/select_openid_provider" do
