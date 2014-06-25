@@ -50,6 +50,7 @@ UNAUTHENTICATED_PREVIEW_ROUTES = ["/commits/", "/stats"]
 # OPENID_PROVIDERS is a string env variable. It's a comma-separated list of OpenID providers.
 OPENID_PROVIDERS_ARRAY = OPENID_PROVIDERS.split(",")
 
+#asdfasdfasdf
 class BarkeepServer < Sinatra::Base
   attr_accessor :current_user
 
